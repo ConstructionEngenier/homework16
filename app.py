@@ -1,13 +1,14 @@
 import json
 
-from flask import Flask, request
+from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 
 import raw_data
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:?charset=utf8'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['JSON_AS_ASCII'] = False
 db = SQLAlchemy(app)
 
 
@@ -116,5 +117,50 @@ for offer_data in raw_data.offers:
     db.session.add(new_offer)
     db.session.commit()
 
+
+@app.route('/users', methods=["POST", "GET"])
+def all_users():
+    if request.method == "GET":
+        result = []
+        for user in User.query.all():
+            result.append(user.to_dict())
+        return jsonify(result), 200, {'Content-Type': 'application/json; charset=utf-8'}
+    elif request.method == "POST":
+        user_data = json.loads(request.data)
+        new_user = User(
+            id=user_data["id"],
+            first_name=user_data["first_name"],
+            last_name=user_data["last_name"],
+            age=user_data["age"],
+            email=user_data["email"],
+            role=user_data["role"],
+            phone=user_data["phone"],
+        )
+        return "", 201
+
+
+@app.route('/users/<int:user_id>', methods=['GET', 'PUT', 'DELETE'])
+def get_user(user_id: int):
+    if request.method == "GET":
+        return jsonify(User.query.get(user_id).to_dict()), 200, {'Content-Type': 'application/json; charset=utf-8'}
+    elif request.method == "PUT":
+        user_data = json.loads(request.data)
+        user = User.query.get(user_id)
+        user.first_name = user_data["first_name"]
+        user.last_name = user_data["last_name"]
+        user.age = user_data["age"]
+        user.email = user_data["email"]
+        user.role = user_data["role"]
+        user.phone = user_data["phone"]
+        db.session.add(user)
+        db.session.commit()
+        return "", 204
+    elif request.method == "DELETE":
+        user = User.query.get(user_id)
+        db.session.delete (user)
+        db.session.commit()
+        return "", 204
+
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port=5002)
