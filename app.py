@@ -172,21 +172,46 @@ def get_all_orders():
             orders.append(order.to_dict())
         return jsonify(orders), 200, {'Content-Type': 'application/json; charset=utf-8'}
     elif request.method == "POST":
-        order_data = json.loads(request.data)
-        new_order = User(
-            id=order_data["id"],
-            name=order_data["name"],
-            description=order_data["description"],
-            start_date=order_data["start_date"],
-            end_date=order_data["end_date"],
-            address=order_data["address"],
-            price=order_data["price"],
-            customer_id=order_data["customer_id"],
-            executor_id=order_data["executor_id"],
+        orders_data = json.loads(request.data)
+        new_order = Order(
+            id=orders_data["id"],
+            name=orders_data["name"],
+            description=orders_data["description"],
+            start_date=orders_data["start_date"],
+            end_date=orders_data["end_date"],
+            address=orders_data["address"],
+            price=orders_data["price"],
+            customer_id=orders_data["customer_id"],
+            executor_id=orders_data["executor_id"],
         )
         db.session.add(new_order)
         db.session.commit()
         return "", 201
+
+
+@app.route('/orders/<int:order_id>', methods=['GET', 'PUT', 'DELETE'])
+def get_order(order_id: int):
+    if request.method == "GET":
+        return jsonify(Order.query.get(order_id).to_dict()), 200, {'Content-Type': 'application/json; charset=utf-8'}
+    elif request.method == "PUT":
+        orders_data = json.loads(request.data)
+        order = Order.query.get(order_id)
+        order.name = orders_data["name"]
+        order.description = orders_data["description"]
+        order.start_date = orders_data["start_date"]
+        order.end_date = orders_data["end_date"]
+        order.address = orders_data["address"]
+        order.price = orders_data["price"]
+        order.customer_id = orders_data["customer_id"]
+        order.executor_id = orders_data["executor_id"]
+        db.session.add(order)
+        db.session.commit()
+        return "", 204
+    elif request.method == "DELETE":
+        order = Order.query.get(order_id)
+        db.session.delete (order)
+        db.session.commit()
+        return "", 204
 
 
 if __name__ == '__main__':
