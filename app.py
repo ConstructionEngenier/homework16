@@ -214,5 +214,43 @@ def get_order(order_id: int):
         return "", 204
 
 
+@app.route('/offers', methods=["POST", "GET"])
+def get_all_offers():
+    if request.method == "GET":
+        offers = []
+        for offer in Offer.query.all():
+            offers.append(offer.to_dict())
+        return jsonify(offers), 200, {'Content-Type': 'application/json; charset=utf-8'}
+    elif request.method == "POST":
+        offers_data = json.loads(request.data)
+        new_offer = Offer(
+            id=offers_data["id"],
+            order_id=offers_data["order_id"],
+            executor_id=offers_data["executor_id"],
+        )
+        db.session.add(new_offer)
+        db.session.commit()
+        return "", 201
+
+
+@app.route('/offers/<int:offer_id>', methods=['GET', 'PUT', 'DELETE'])
+def get_offer(offer_id: int):
+    if request.method == "GET":
+        return jsonify(Offer.query.get(offer_id).to_dict()), 200, {'Content-Type': 'application/json; charset=utf-8'}
+    elif request.method == "PUT":
+        offers_data = json.loads(request.data)
+        offer = Offer.query.get(offer_id)
+        offer.order_id = offers_data["order_id"]
+        offer.executor_id = offers_data["executor_id"]
+        db.session.add(offer)
+        db.session.commit()
+        return "", 204
+    elif request.method == "DELETE":
+        offer = Offer.query.get(offer_id)
+        db.session.delete(offer)
+        db.session.commit()
+        return "", 204
+
+
 if __name__ == '__main__':
     app.run(debug=True, port=5002)
