@@ -119,12 +119,12 @@ for offer_data in raw_data.offers:
 
 
 @app.route('/users', methods=["POST", "GET"])
-def all_users():
+def get_all_users():
     if request.method == "GET":
-        result = []
+        users = []
         for user in User.query.all():
-            result.append(user.to_dict())
-        return jsonify(result), 200, {'Content-Type': 'application/json; charset=utf-8'}
+            users.append(user.to_dict())
+        return jsonify(users), 200, {'Content-Type': 'application/json; charset=utf-8'}
     elif request.method == "POST":
         user_data = json.loads(request.data)
         new_user = User(
@@ -136,6 +136,8 @@ def all_users():
             role=user_data["role"],
             phone=user_data["phone"],
         )
+        db.session.add(new_user)
+        db.session.commit()
         return "", 201
 
 
@@ -160,6 +162,31 @@ def get_user(user_id: int):
         db.session.delete (user)
         db.session.commit()
         return "", 204
+
+
+@app.route('/users', methods=["POST", "GET"])
+def get_all_orders():
+    if request.method == "GET":
+        orders = []
+        for order in Order.query.all():
+            orders.append(order.to_dict())
+        return jsonify(orders), 200, {'Content-Type': 'application/json; charset=utf-8'}
+    elif request.method == "POST":
+        order_data = json.loads(request.data)
+        new_order = User(
+            id=order_data["id"],
+            name=order_data["name"],
+            description=order_data["description"],
+            start_date=order_data["start_date"],
+            end_date=order_data["end_date"],
+            address=order_data["address"],
+            price=order_data["price"],
+            customer_id=order_data["customer_id"],
+            executor_id=order_data["executor_id"],
+        )
+        db.session.add(new_order)
+        db.session.commit()
+        return "", 201
 
 
 if __name__ == '__main__':
