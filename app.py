@@ -164,7 +164,7 @@ def get_user(user_id: int):
         return "", 204
 
 
-@app.route('/users', methods=["POST", "GET"])
+@app.route('/orders', methods=["POST", "GET"])
 def get_all_orders():
     if request.method == "GET":
         orders = []
